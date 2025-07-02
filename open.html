@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
@@ -32,24 +29,15 @@
       display: none;
       z-index: 10;
     }
-    #gameModeSelection {
+    #gameModeSelection, #loginScreen {
       position: absolute;
       top: 20%;
       left: 50%;
       transform: translateX(-50%);
       color: white;
       text-align: center;
-      display: none; /* Hide by default */
     }
-    #loginScreen {
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      text-align: center;
-      display: none; /* Hide by default */
-    }
+    #gameModeSelection { display: none; }
     #username {
       margin: 10px 0;
       padding: 10px;
@@ -74,17 +62,34 @@
       color: black;
       cursor: pointer;
     }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+      z-index: 20;
+    }
+    #controls button {
+      pointer-events: auto;
+      font-size: 24px;
+      padding: 15px 20px;
+      margin: 0 10px;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+    }
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
   <div id="loginScreen">
     <h2>Masukkan Username:</h2>
     <input type="text" id="username" placeholder="Username" />
     <button id="startGameButton">Mulai Game</button>
   </div>
 
-  <!-- Pemilihan Game Mode -->
   <div id="gameModeSelection">
     <h2>Pilih Mode Permainan:</h2>
     <div id="modeButtons">
@@ -106,65 +111,68 @@
         <div style="background-color: red; height: 30px"></div>
         <div id="enemyHealth" style="position: absolute; background: #818cf8; top: 0; right: 0; bottom: 0; left: 0;"></div>
       </div>
-      <div></div>
     </div>
     <div id="displayText" style="position: absolute; color: white; align-items: center; justify-content: center; top: 0; right: 0; bottom: 0; left: 0; display: none;">Tie</div>
     <canvas></canvas>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js" integrity="sha512-H6cPm97FAsgIKmlBA4s774vqoN24V5gSQL4yBTDOY2su2DeXZVhQPxFK4P6GPdnZqM9fg1G3cMv5wD7e6cFLZQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <div id="controls">
+    <div>
+      <button id="left">◀</button>
+      <button id="right">▶</button>
+    </div>
+    <div>
+      <button id="jump">⬆</button>
+      <button id="attack">⚔</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js" crossorigin="anonymous"></script>
   <script src="js/utils.js"></script>
   <script src="js/classes.js"></script>
   <script src="index.js"></script>
-
   <script>
-    // DOM Elements
-    const loginScreen = document.getElementById('loginScreen');
-    const gameModeSelection = document.getElementById('gameModeSelection');
-    const startGameButton = document.getElementById('startGameButton');
-    const vsAIButton = document.getElementById('vsAI');
-    const multiplayerButton = document.getElementById('multiplayer');
-    const restartButton = document.getElementById('restartButton');
-    const usernameInput = document.getElementById('username');
-
-    // Show login screen on page load
-    window.onload = function() {
-      loginScreen.style.display = 'block';
+    const controls = {
+      left: document.getElementById('left'),
+      right: document.getElementById('right'),
+      jump: document.getElementById('jump'),
+      attack: document.getElementById('attack')
     };
 
-    // Start game button click event
-    startGameButton.addEventListener('click', function() {
-      const username = usernameInput.value.trim();
-      if (username === '') {
-        alert('Silakan masukkan username!');
-        return;
-      }
+    controls.left.addEventListener('touchstart', () => { keys.a.pressed = true; player.lastKey = 'a'; });
+    controls.left.addEventListener('touchend', () => { keys.a.pressed = false; });
+
+    controls.right.addEventListener('touchstart', () => { keys.d.pressed = true; player.lastKey = 'd'; });
+    controls.right.addEventListener('touchend', () => { keys.d.pressed = false; });
+
+    controls.jump.addEventListener('touchstart', () => {
+      if (!player.dead) player.velocity.y = -20;
+    });
+
+    controls.attack.addEventListener('touchstart', () => {
+      if (!player.dead) player.attack();
+    });
+
+    const loginScreen = document.getElementById('loginScreen');
+    const startButton = document.getElementById('startGameButton');
+    const usernameInput = document.getElementById('username');
+    const gameModeSelection = document.getElementById('gameModeSelection');
+
+    // Tampilkan login screen jika belum ada gameMode
+    if (!localStorage.getItem('gameMode')) {
+      loginScreen.style.display = 'block';
+    } else {
       loginScreen.style.display = 'none';
-      gameModeSelection.style.display = 'block';
-    });
-
-    // Game mode selection
-    vsAIButton.addEventListener('click', function() {
-      startGame('singleplayer');
-    });
-
-    multiplayerButton.addEventListener('click', function() {
-      startGame('multiplayer');
-    });
-
-    // Function to start the game
-    function startGame(mode) {
-      console.log(`Game dimulai dalam mode: ${mode}`);
-      // Hide mode selection and show game canvas
-      gameModeSelection.style.display = 'none';
-      // Here you can initialize your game logic based on the selected mode
-      // For example, you can call a function to start the game loop
     }
 
-    // Restart button functionality
-    restartButton.addEventListener('click', function() {
-      // Logic to restart the game
-      console.log('Game di-restart');
+    startButton.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      if (username !== '') {
+        loginScreen.style.display = 'none';
+        gameModeSelection.style.display = 'block';
+      } else {
+        alert('Masukkan username terlebih dahulu.');
+      }
     });
   </script>
 </body>
